@@ -1,0 +1,11 @@
+---
+- hosts: all
+  become: true
+  gather_facts: true
+  roles:
+    - docker_setup
+
+- hosts: all
+  become: True
+  roles: 
+    - nginx_container

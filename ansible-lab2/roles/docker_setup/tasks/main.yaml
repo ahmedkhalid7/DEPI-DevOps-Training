@@ -1,0 +1,68 @@
+
+- name: Uninstall conflicting packages
+  apt:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - docker.io
+    - docker-doc
+    - docker-compose
+    - docker-compose-v2
+    - podman-docker 
+    - containerd 
+    - runc
+  notify: Update packages database
+
+- name: Install ca-certificates and curl packages
+  apt:
+    name: "{{ item }}"
+    state: latest
+  loop:
+    - ca-certificates
+    - curl
+
+- name: Create /etc/apt/keyrings directory
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Download Docker GPG key
+  get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+
+- name: Set read permissions for docker.asc file
+  file:
+    path: /etc/apt/keyrings/docker.asc
+    mode: 'a+r'
+
+- name: Add Docker repository entry to docker.list
+  lineinfile:
+    path: /etc/apt/sources.list.d/docker.list
+    line: "deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    create: yes
+  notify: Update packages database
+
+- name: Install docker packages
+  apt:
+    name: "{{ item }}"
+    state: latest
+  loop:
+    - docker-ce 
+    - docker-ce-cli 
+    - containerd.io 
+    - docker-buildx-plugin 
+    - docker-compose-plugin
+
+- name: Run the hello-world container
+  community.docker.docker_container:
+    name: my_container
+    state: started
+    image: hello-world
+  register: container_output
+
+# - name: Display the output of the hello-world container
+#   debug:
+#     msg: "{{ container_output }}"

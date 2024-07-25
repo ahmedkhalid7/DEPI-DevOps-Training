@@ -1,0 +1,11 @@
+- name: Create an nginx container
+  community.docker.docker_container:
+    name: nginx_conatiner
+    image: nginx
+    ports:
+      "3000:80"
+  register: container_output
+
+# - name: Display the output of the nginx_conatiner container
+#   debug:
+#     msg: "{{ container_output.stdout }}"
