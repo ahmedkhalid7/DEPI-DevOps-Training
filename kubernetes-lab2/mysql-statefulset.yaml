@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-statefulset
+  labels:
+    app: blog
+    rel: backend
+spec:
+  serviceName: mysql-pods
+  podManagementPolicy: Parallel
+  replicas: 3
+  selector:
+    matchLabels:
+      app: blog
+      rel: backend
+  template:
+    metadata:
+      labels:
+        app: blog
+        rel: backend
+    spec:
+      volumes:
+      - name: mysql-pvc
+        persistentVolumeClaim:
+          claimName: mysql-pvc
+      containers:
+      - name: mysql
+        image: mysql
+        imagePullPolicy: Always
+        env:
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-config
+                  key: database
+            - name: MYSQL_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-config
+                  key: username
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-config
+                  key: password
+        ports:
+        - name: http
+          containerPort: 3306
+        volumeMounts:
+        - name: mysql-pvc
+          mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-pvc
+      labels:
+        app: blog
+        rel: backend
+    spec:
+      resources:
+        requests:
+          storage: 1Gi
+      accessModes:
+      - ReadWriteOnce
